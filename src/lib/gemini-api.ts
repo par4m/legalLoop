@@ -29,9 +29,9 @@ function handleTimeout(error: any) {
     summary: "Request Timed Out",
     issues: [{ 
       severity: "Error", 
-      description: "The request took too long to process. Please try again with a shorter contract or contact support if the issue persists.",
+      description: "The request took too long to process. This could be due to high API load or network issues. Please try again in a few moments.",
       law: "N/A",
-      fix: "Try again with a shorter contract or split the analysis into smaller sections.",
+      fix: "1. Wait a few moments and try again\n2. If the issue persists, try with a shorter contract\n3. If problems continue, contact support",
       ycReference: "N/A"
     }],
     overallRisk: "Unknown",
@@ -39,27 +39,46 @@ function handleTimeout(error: any) {
   };
 }
 
-// Helper function to handle API calls with timeout
-async function generateContentWithTimeout(model: any, prompt: string, timeoutMs: number = 8000) {
-  try {
-    const result = await Promise.race([
-      model.generateContent(prompt),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timed out')), timeoutMs)
-      )
-    ]);
-    
-    if (!result || !result.response) {
-      throw new Error('Invalid API response');
+// Helper function to handle API calls with timeout and retries
+async function generateContentWithTimeout(model: any, prompt: string, timeoutMs: number = 25000, maxRetries: number = 1) {
+  let lastError;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Attempt ${attempt + 1} of ${maxRetries + 1}`);
+      
+      const result = await Promise.race([
+        model.generateContent(prompt),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timed out')), timeoutMs)
+        )
+      ]);
+      
+      if (!result || !result.response) {
+        throw new Error('Invalid API response');
+      }
+      
+      return result;
+    } catch (error) {
+      lastError = error;
+      console.error(`Attempt ${attempt + 1} failed:`, error);
+      
+      // If it's not a timeout error, don't retry
+      if (!(error instanceof Error && error.message === 'Request timed out')) {
+        throw error;
+      }
+      
+      // If this was the last attempt, throw the error
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
     }
-    
-    return result;
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Request timed out') {
-      throw error;
-    }
-    throw error;
   }
+  
+  throw lastError;
 }
 
 // Helper function to sanitize API responses and ensure they're valid JSON
@@ -119,6 +138,25 @@ function sanitizeAndParseResponse(text: string) {
   }
 }
 
+// Helper function to truncate text with warning
+function truncateText(text: string, maxLength: number = 4000) {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  
+  // Try to truncate at a sentence boundary
+  const truncated = text.substring(0, maxLength);
+  const lastSentence = truncated.lastIndexOf('.');
+  const lastSpace = truncated.lastIndexOf(' ');
+  
+  const truncateAt = lastSentence > maxLength * 0.5 ? lastSentence : lastSpace;
+  const finalText = truncated.substring(0, truncateAt + 1);
+  
+  const warning = `\n\n[WARNING: Contract has been truncated to ${finalText.length} characters for processing. The full analysis may be limited.]`;
+  
+  return finalText + warning;
+}
+
 export async function analyzeContract(contractText: string) {
   if (!hasApiKey) {
     return getApiKeyErrorMessage();
@@ -128,9 +166,11 @@ export async function analyzeContract(contractText: string) {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
     // Truncate long contracts to prevent timeouts
-    const truncatedText = contractText.length > 8000 
-      ? contractText.substring(0, 8000) + "\n[Contract truncated due to length]"
-      : contractText;
+    const truncatedText = truncateText(contractText);
+    
+    if (truncatedText !== contractText) {
+      console.log(`Contract truncated from ${contractText.length} to ${truncatedText.length} characters`);
+    }
     
     const prompt = `You are a legal AI assistant specializing in startup compliance.
     Current YC SAFE version: 2023. Always reference Delaware Corp Law and SEC Reg D when applicable.
@@ -308,9 +348,7 @@ export async function compareWithYCTemplate(contractText: string) {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
     // Truncate long contracts to prevent timeouts
-    const truncatedText = contractText.length > 8000 
-      ? contractText.substring(0, 8000) + "\n[Contract truncated due to length]"
-      : contractText;
+    const truncatedText = truncateText(contractText);
     
     const prompt = `You are a legal AI assistant specializing in startup funding agreements.
     
