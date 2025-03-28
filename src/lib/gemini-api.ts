@@ -22,25 +22,88 @@ function getApiKeyErrorMessage() {
   };
 }
 
+// Helper function to handle timeouts
+function handleTimeout(error: any) {
+  console.error('Request timed out:', error);
+  return {
+    summary: "Request Timed Out",
+    issues: [{ 
+      severity: "Error", 
+      description: "The request took too long to process. Please try again with a shorter contract or contact support if the issue persists.",
+      law: "N/A",
+      fix: "Try again with a shorter contract or split the analysis into smaller sections.",
+      ycReference: "N/A"
+    }],
+    overallRisk: "Unknown",
+    complianceScore: 0
+  };
+}
+
+// Helper function to handle API calls with timeout
+async function generateContentWithTimeout(model: any, prompt: string, timeoutMs: number = 8000) {
+  try {
+    const result = await Promise.race([
+      model.generateContent(prompt),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timed out')), timeoutMs)
+      )
+    ]);
+    
+    if (!result || !result.response) {
+      throw new Error('Invalid API response');
+    }
+    
+    return result;
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Request timed out') {
+      throw error;
+    }
+    throw error;
+  }
+}
+
 // Helper function to sanitize API responses and ensure they're valid JSON
 function sanitizeAndParseResponse(text: string) {
   try {
-    // Try to parse as is first
+    // First try to parse as is
     return JSON.parse(text);
   } catch (error) {
     console.log("Could not parse response as JSON directly, attempting to extract JSON portion");
     
-    // Try to extract JSON portion from text
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        return JSON.parse(jsonMatch[0]);
-      } catch (nestedError) {
-        console.error("Failed to parse extracted JSON portion:", nestedError);
+    // Try to extract JSON portion from text using multiple patterns
+    const patterns = [
+      /\{[\s\S]*\}/,  // Basic JSON object
+      /\[[\s\S]*\]/,  // JSON array
+      /\{[\s\S]*\}(?![\s\S]*\{)/,  // Last JSON object in text
+      /\[[\s\S]*\](?![\s\S]*\[)/   // Last JSON array in text
+    ];
+    
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match) {
+        try {
+          const parsed = JSON.parse(match[0]);
+          if (parsed && typeof parsed === 'object') {
+            return parsed;
+          }
+        } catch (nestedError) {
+          console.error("Failed to parse extracted JSON portion:", nestedError);
+        }
       }
     }
     
-    // If all extraction attempts fail, create a fallback object with the raw text
+    // If all extraction attempts fail, try to clean the text and parse again
+    try {
+      // Remove any markdown code block markers
+      const cleanedText = text.replace(/```json\n?|\n?```/g, '');
+      // Remove any leading/trailing whitespace and newlines
+      const trimmedText = cleanedText.trim();
+      return JSON.parse(trimmedText);
+    } catch (cleanError) {
+      console.error("Failed to parse cleaned text:", cleanError);
+    }
+    
+    // If all parsing attempts fail, create a fallback object with the raw text
     return {
       summary: "Could not process in structured format",
       issues: [{
@@ -63,6 +126,11 @@ export async function analyzeContract(contractText: string) {
 
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+    // Truncate long contracts to prevent timeouts
+    const truncatedText = contractText.length > 8000 
+      ? contractText.substring(0, 8000) + "\n[Contract truncated due to length]"
+      : contractText;
     
     const prompt = `You are a legal AI assistant specializing in startup compliance.
     Current YC SAFE version: 2023. Always reference Delaware Corp Law and SEC Reg D when applicable.
@@ -91,16 +159,20 @@ export async function analyzeContract(contractText: string) {
     }
     
     CONTRACT TEXT:
-    ${contractText}`;
+    ${truncatedText}`;
     
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const result = await generateContentWithTimeout(model, prompt);
+    const text = result.response.text();
     
     // Process the response to ensure it's valid JSON
     return sanitizeAndParseResponse(text);
   } catch (error) {
     console.error('Error analyzing contract:', error);
+    
+    // Check for timeout
+    if (error instanceof Error && error.message === 'Request timed out') {
+      return handleTimeout(error);
+    }
     
     // Check for specific API errors
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -171,14 +243,27 @@ export async function simulateNegotiation(clauseText: string, perspective: strin
       "suggestedResponse": "A suggested verbal response in a negotiation"
     }`;
     
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const result = await generateContentWithTimeout(model, prompt);
+    const text = result.response.text();
     
     // Process the response to ensure it's valid JSON
     return sanitizeAndParseResponse(text);
   } catch (error) {
     console.error('Error simulating negotiation:', error);
+    
+    // Check for timeout
+    if (error instanceof Error && error.message === 'Request timed out') {
+      return {
+        originalClause: clauseText,
+        analysis: "Request timed out while processing the negotiation simulation.",
+        negotiationPoints: [{
+          point: "ERROR",
+          justification: "The request took too long to process.",
+          suggestedRevision: "Please try again with a shorter clause or contact support."
+        }],
+        suggestedResponse: "The request timed out. Please try again."
+      };
+    }
     
     const errorMessage = error instanceof Error ? error.message : String(error);
     
@@ -222,6 +307,11 @@ export async function compareWithYCTemplate(contractText: string) {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
+    // Truncate long contracts to prevent timeouts
+    const truncatedText = contractText.length > 8000 
+      ? contractText.substring(0, 8000) + "\n[Contract truncated due to length]"
+      : contractText;
+    
     const prompt = `You are a legal AI assistant specializing in startup funding agreements.
     
     Compare the following contract with the latest YC SAFE template (2023 version).
@@ -253,16 +343,31 @@ export async function compareWithYCTemplate(contractText: string) {
     }
     
     CONTRACT TEXT:
-    ${contractText}`;
+    ${truncatedText}`;
     
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const result = await generateContentWithTimeout(model, prompt);
+    const text = result.response.text();
     
     // Process the response to ensure it's valid JSON
     return sanitizeAndParseResponse(text);
   } catch (error) {
     console.error('Error comparing with YC template:', error);
+    
+    // Check for timeout
+    if (error instanceof Error && error.message === 'Request timed out') {
+      return {
+        summary: "Request Timed Out",
+        adherence: "Unknown",
+        differences: [{
+          section: "ERROR",
+          ycVersion: "N/A",
+          contractVersion: "N/A",
+          impact: "The request took too long to process.",
+          recommendation: "Try again with a shorter contract or split the analysis into smaller sections."
+        }],
+        missingElements: []
+      };
+    }
     
     const errorMessage = error instanceof Error ? error.message : String(error);
     

@@ -4,9 +4,17 @@ import { parsePdf } from '@/lib/pdf-utils';
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('Received audit request');
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
     const text = formData.get('text') as string | null;
+    
+    console.log('Request details:', {
+      hasFile: !!file,
+      fileType: file?.type,
+      fileSize: file?.size,
+      textLength: text?.length
+    });
     
     let contractText = '';
     
@@ -38,6 +46,7 @@ export async function POST(req: NextRequest) {
       contractText = text;
       console.log(`Processing text input of length ${contractText.length} characters`);
     } else {
+      console.error('No file or text provided in request');
       return NextResponse.json(
         { error: 'No file or text provided' },
         { status: 400 }
@@ -47,6 +56,11 @@ export async function POST(req: NextRequest) {
     // Analyze the contract using Gemini API
     console.log('Sending contract text to Gemini API for analysis');
     const analysisResult = await analyzeContract(contractText);
+    console.log('Received analysis result:', {
+      hasSummary: !!analysisResult.summary,
+      issuesCount: analysisResult.issues?.length,
+      hasComplianceScore: typeof analysisResult.complianceScore === 'number'
+    });
     
     // Include extracted text in the response for PDF uploads
     return NextResponse.json({
