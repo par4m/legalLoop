@@ -1,0 +1,67 @@
+SIMPLE AGREEMENT FOR FUTURE EQUITY (SAFE)
+
+THIS CERTIFIES THAT in exchange for the payment by [Investor Name] (the "Investor") of $100,000 (the "Purchase Amount") on or about [Date], [Company Name], a Delaware corporation (the "Company"), issues to the Investor the right to certain shares of the Company's Capital Stock, subject to the terms described below.
+
+1. Events
+
+(a) Equity Financing. If there is an Equity Financing before the termination of this Safe, on the initial closing of such Equity Financing, this Safe will automatically convert into the number of shares of Safe Preferred Stock equal to the Purchase Amount divided by the Discount Price.
+
+(b) Liquidity Event. If there is a Liquidity Event before the termination of this Safe, this Safe will automatically be entitled to receive a portion of Proceeds, due and payable to the Investor immediately prior to, or concurrent with, the consummation of such Liquidity Event, equal to the greater of (i) the Purchase Amount (the "Cash-Out Amount") or (ii) the amount payable on the number of shares of Common Stock equal to the Purchase Amount divided by the Liquidity Price (the "Conversion Amount").
+
+(c) Dissolution Event. If there is a Dissolution Event before the termination of this Safe, the Investor will automatically be entitled to receive a portion of Proceeds equal to the Cash-Out Amount, due and payable to the Investor immediately prior to the consummation of the Dissolution Event.
+
+2. Definitions
+
+"Capital Stock" means the capital stock of the Company, including, without limitation, the "Common Stock" and the "Preferred Stock."
+
+"Discount Price" means the lowest price per share of the Standard Preferred Stock sold in the Equity Financing multiplied by the Discount Rate. The Discount Rate is 85%.
+
+"Equity Financing" means a bona fide transaction or series of transactions with the principal purpose of raising capital, pursuant to which the Company issues and sells Preferred Stock at a fixed valuation, including but not limited to, a pre-money or post-money valuation.
+
+"Liquidity Event" means a Change of Control or an Initial Public Offering.
+
+"Liquidity Price" means the price per share equal to the fair market value of the Common Stock at the time of the Liquidity Event, as determined by reference to the purchase price payable in connection with such Liquidity Event, multiplied by the Discount Rate.
+
+"Safe" means an instrument containing a future right to shares of Capital Stock, similar in form and content to this instrument, purchased by investors for the purpose of funding the Company's business operations.
+
+"Safe Preferred Stock" means the shares of the series of Preferred Stock issued to the Investor in an Equity Financing, having the identical rights, privileges, preferences and restrictions as the shares of Standard Preferred Stock, other than with respect to: (i) the per share liquidation preference and the conversion price for purposes of price-based anti-dilution protection, which will equal the Discount Price; and (ii) the basis for any dividend rights, which will be based on the Discount Price.
+
+3. Company Representations
+
+(a) The Company is a corporation duly organized, validly existing and in good standing under the laws of its state of incorporation, and has the power and authority to own, lease and operate its properties and carry on its business as now conducted.
+
+(b) The execution, delivery and performance by the Company of this Safe is within the power of the Company and has been duly authorized by all necessary actions on the part of the Company. This Safe constitutes a legal, valid and binding obligation of the Company, enforceable against the Company in accordance with its terms, except as limited by bankruptcy, insolvency or other laws of general application relating to or affecting the enforcement of creditors' rights generally and general principles of equity.
+
+4. Investor Representations
+
+The Investor hereby represents and warrants that:
+
+(a) The Investor has full legal capacity, power and authority to execute and deliver this Safe and to perform its obligations hereunder. 
+
+(b) The Investor is an accredited investor as such term is defined in Rule 501 of Regulation D under the Securities Act. The Investor has been advised that this Safe has not been registered under the Securities Act, or any state securities laws and, therefore, cannot be resold unless registered under the Securities Act and applicable state securities laws or unless an exemption from such registration requirements is available.
+
+(c) The Investor is purchasing this Safe for its own account for investment, not as a nominee or agent, and not with a view to, or for resale in connection with, the distribution thereof, and the Investor has no present intention of selling, granting any participation in, or otherwise distributing the same.
+
+5. Governance Rights
+
+The Investor shall have the right to vote on corporate matters in proportion to their ownership stakes on an as-converted basis, only in the case of a Major Corporate Transaction, which includes: a merger, acquisition, or sale of substantially all assets of the Company.
+
+6. Arbitration
+
+Any dispute, controversy or claim arising out of, relating to or in connection with this contract, including any question regarding its existence, validity or termination, shall be resolved by final and binding arbitration under the Rules of Arbitration of the International Chamber of Commerce, which rules are deemed to be incorporated by reference into this clause.
+
+IN WITNESS WHEREOF, the undersigned have caused this Safe to be duly executed and delivered.
+
+[COMPANY]:
+
+By:_________________________
+     [Company Signatory]
+     [Title]
+     [Date]
+
+[INVESTOR]:
+
+By:_________________________
+     [Investor Signatory]
+     [Title]
+     [Date] 
