@@ -13,15 +13,17 @@ An AI-powered contract auditing tool that helps startups, founders, and legal pr
 ## Tech Stack
 
 - **Frontend:** Next.js 15+ with React 18
-- **Styling:** Tailwind CSS
-- **AI Model:** Google Gemini Pro API
-- **PDF Parsing:** pdf-parse library
+- **Backend:** FastAPI
+- **Styling:** Tailwind CSS, Shadcn UI
+- **AI Model:** Google Gemini 2.5
+
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ and npm
+- FastAPI 
 
 ### Installation
 
